@@ -1,0 +1,16 @@
+environments:
+    memory:
+        adapter: sqlite
+        memory: true
+        name: testing
+    file:
+        adapter: sqlite
+        name: %%PHINX_CONFIG_DIR%%/data/database
+    mysql:
+        adapter: mysql
+        name: phinx
+        host: localhost
+        user: root
+        pass: root
+paths:
+    migrations: %%PHINX_CONFIG_DIR%%/migrations

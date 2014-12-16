@@ -1,0 +1,12 @@
+#! /usr/bin/env php
+
+<?php require 'vendor/autoload.php';
+
+use CWSpear\Different\ExportSchemaCommand;
+use Symfony\Component\Console\Application;
+
+$app = new Application('Different Migrations', '0.1.0');
+
+$app->add(new ExportSchemaCommand);
+
+$app->run();

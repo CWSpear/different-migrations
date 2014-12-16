@@ -1,0 +1,17 @@
+{
+    "require": {
+        "symfony/console": "~2.4.0",
+        "phpspec/phpspec": "~2.0",
+        "symfony/yaml": "~2.1.0",
+        "robmorgan/phinx": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "CWSpear\\": "src/CWSpear"
+        },
+        "psr-0": {
+            "": "src"
+        }
+    },
+    "minimum-stability": "dev"
+}

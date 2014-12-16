@@ -1,0 +1,89 @@
+{
+    "table": "example",
+    "columns": {
+        "id": {
+            "type": "integer",
+            "identity": true
+        },
+        "string_col": {
+            "type": "string"
+        },
+        "index1_col": {
+            "type": "string"
+        },
+        "index2_col": {
+            "type": "string"
+        },
+        "foreign_id": {
+            "type": "integer",
+            "null": true
+        },
+        "text_col": {
+            "type": "text"
+        },
+        "integer_col": {
+            "type": "integer"
+        },
+        "biginteger_col": {
+            "type": "biginteger"
+        },
+        "float_col": {
+            "type": "float"
+        },
+        "decimal_col": {
+            "type": "decimal",
+            "limit": "10"
+        },
+        "datetime_col": {
+            "type": "datetime"
+        },
+        "timestamp_col": {
+            "type": "timestamp",
+            "default": "CURRENT_TIMESTAMP"
+        },
+        "time_col": {
+            "type": "time"
+        },
+        "date_col": {
+            "type": "date"
+        },
+        "binary_col": {
+            "type": "binary"
+        },
+        "boolean_col": {
+            "type": "boolean"
+        },
+        "string_limit_col": {
+            "type": "string",
+            "limit": "100"
+        }
+    },
+    "indexes": [
+        {
+            "columns": [
+                "string_col",
+                "integer_col"
+            ],
+            "unique": true
+        },
+        {
+            "columns": [
+                "index1_col"
+            ],
+            "unique": true
+        },
+        {
+            "columns": [
+                "index2_col"
+            ],
+            "unique": false
+        }
+    ],
+    "foreign_keys": [
+        {
+            "local_column": "foreign_id",
+            "foreign_table": "example_foreign",
+            "foreign_column": "id"
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "table": "example_foreign",
+    "columns": {
+        "id": {
+            "type": "integer",
+            "identity": true
+        }
+    },
+    "indexes": [],
+    "foreign_keys": []
+}
