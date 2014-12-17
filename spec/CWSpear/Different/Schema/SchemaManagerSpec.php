@@ -30,7 +30,7 @@ class SchemaManagerSpec extends ObjectBehavior
     }
 
     /**
-     * Do some tasks on cleanup
+     * Do some tasks on tear down
      */
     function letGo()
     {
@@ -101,7 +101,7 @@ class SchemaManagerSpec extends ObjectBehavior
 
     function it_should_load_schema()
     {
-        $expected = include("{$this->expectedDir}/example.php");
+        $expected = $this->loadExpected('example.php', true);
 
         $this->setOptions([
             'dir'    => $this->expectedDir,
@@ -136,7 +136,7 @@ class SchemaManagerSpec extends ObjectBehavior
 
     function it_should_get_table_schema()
     {
-        $expected = include("{$this->expectedDir}/example.php");
+        $expected = $this->loadExpected('example.php', true);
 
         $this->setOptions([
             'dir'    => $this->outputDir,
@@ -149,6 +149,7 @@ class SchemaManagerSpec extends ObjectBehavior
     function it_should_export_a_schema_file()
     {
         $this->clearOutputDir();
+
         $this->setOptions([
             'dir'    => $this->outputDir,
             'format' => 'json',
@@ -162,6 +163,7 @@ class SchemaManagerSpec extends ObjectBehavior
     function its_export_should_match_the_current_schema()
     {
         $this->clearOutputDir();
+
         $this->setOptions([
             'dir'    => $this->outputDir,
             'format' => 'json',
@@ -176,22 +178,21 @@ class SchemaManagerSpec extends ObjectBehavior
             ->shouldEqual($fixtureSchema);
     }
 
-    /**
-     * Execute a command with the provided input
-     *
-     * @param Command $command
-     * @param array $input
-     * @return int
-     * @throws \Exception
-     */
-    protected function executeCommand(Command $command, array $input)
+    function it_should_create_migrations()
     {
-        $input = new ArrayInput($input);
-        $output = new NullOutput();
-        $command->run($input, $output);
-        return $command;
+        $diffUp   = $this->loadExpected('simple_diff_up.php', true);
+        $diffDown = $this->loadExpected('simple_diff_down.php', true);
+
+        $this->createMigration($diffUp, $diffDown);
+
+        $this->compareFixture('simple_migration.php');
     }
 
+    /**
+     * Compare expected to actual outputs based on filename (i.e. example.json)
+     *
+     * @param $fileName
+     */
     protected function compareFixture($fileName)
     {
         $this->getFileContents("{$this->outputDir}/{$fileName}")
@@ -209,6 +210,23 @@ class SchemaManagerSpec extends ObjectBehavior
             if ($file[0] === '.') continue;
 
             unlink("{$this->outputDir}/{$file}");
+        }
+    }
+
+    /**
+     * Load file from expected fixtures directory
+     *
+     * @param string $fileName
+     * @param bool $include whether to use include() or file_get_contents()
+     * @return string
+     */
+    protected function loadExpected($fileName, $include = false)
+    {
+        $filePath = "{$this->expectedDir}/{$fileName}";
+        if ($include) {
+            return include($filePath);
+        } else {
+            return file_get_contents($filePath);
         }
     }
 }

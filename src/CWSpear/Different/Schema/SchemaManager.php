@@ -311,7 +311,7 @@ class SchemaManager extends Manager
     public function getFileContents($filePath)
     {
         if (!$this->fileExists($filePath)) {
-            throw new FileNotFoundException("File {$filePath} not found or not readable.");
+            throw new FileNotFoundException("File '{$filePath}' not found or not readable.");
         }
 
         return file_get_contents($filePath);
@@ -336,7 +336,7 @@ class SchemaManager extends Manager
             // @todo support other formats
 
             default:
-                throw new InvalidFormatException("{$format} output format is not (yet?) supported");
+                throw new InvalidFormatException("'{$format}' output format is not (yet?) supported");
         }
 
         return $str;
@@ -361,9 +361,20 @@ class SchemaManager extends Manager
             // @todo support other formats
 
             default:
-                throw new InvalidFormatException("{$format} output format is not (yet?) supported");
+                throw new InvalidFormatException("'{$format}' output format is not (yet?) supported");
         }
 
         return $array;
+    }
+
+    /**
+     * Create a migration based on up and down diffs
+     *
+     * @param array $up
+     * @param array $down
+     */
+    public function createMigration(array $up, array $down)
+    {
+        // TODO: write logic here
     }
 }
