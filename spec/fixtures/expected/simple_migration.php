@@ -13,6 +13,7 @@ class SimpleMigration extends AbstractMigration
         $table->addColumn('new_col', 'string', array (
             'unique' => true,
         ));
+        $table->update();
     }
 
     /**
@@ -22,5 +23,6 @@ class SimpleMigration extends AbstractMigration
     {
         $table = $this->table('example');
         $table->removeColumn('string_col');
+        $table->update();
     }
 }

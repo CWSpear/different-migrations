@@ -425,7 +425,17 @@ class SchemaManager extends Manager
             $downLines[] = "\$table->{$tableChange}();";
         }
 
+        $template = file_get_contents(__DIR__ . '/../templates/Migration.template.php.dist');
 
+        $replacements = [
+            'CLASS_NAME' => 'SimpleMigration',
+            'UP_CODE'    => implode(self::LINE_SEPARATOR, $upLines),
+            'DOWN_CODE'  => implode(self::LINE_SEPARATOR, $downLines),
+        ];
+
+        $template = str_replace(array_keys($replacements), array_values($replacements), $template);
+
+        $this->saveToFile('simple_migration.php', $template, true);
     }
 
     /**

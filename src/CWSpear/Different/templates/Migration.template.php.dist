@@ -1,0 +1,22 @@
+<?php
+
+use Phinx\Migration\AbstractMigration;
+
+class CLASS_NAME extends AbstractMigration
+{
+    /**
+     * Migrate Up.
+     */
+    public function up()
+    {
+        UP_CODE
+    }
+
+    /**
+     * Migrate Down.
+     */
+    public function down()
+    {
+        DOWN_CODE
+    }
+}
