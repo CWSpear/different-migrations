@@ -10,7 +10,9 @@ class SimpleMigration extends AbstractMigration
     public function up()
     {
         $table = $this->table('example');
-        $table->addColumn('new_col', 'string');
+        $table->addColumn('new_col', 'string', array (
+            'unique' => true,
+        ));
     }
 
     /**

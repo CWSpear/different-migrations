@@ -13,17 +13,13 @@ class ExportSchemaCommand extends AbstractCommand
 
         $this->setName('export')
             ->setDescription('Create schema files based on the current state of the database.')
-            ->addOption('--environment', '-e', InputOption::VALUE_OPTIONAL, 'The target environment')
-            ->addOption('--dir', '-d', InputOption::VALUE_OPTIONAL, 'The output directory for schema files', '.')
-            ->addOption('--format', '-f', InputOption::VALUE_OPTIONAL, 'Override the default format', 'json');
+            ->addOption('--environment', '-e', InputOption::VALUE_OPTIONAL, 'The target environment');
     }
 
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $this->bootstrap($input, $output);
 
-        $dir = $input->getOption('dir');
-        $format = $input->getOption('format');
         $environment = $input->getOption('environment');
 
         if (null === $environment) {

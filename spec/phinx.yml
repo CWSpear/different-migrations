@@ -13,4 +13,6 @@ environments:
         user: root
         pass: root
 paths:
-    migrations: %%PHINX_CONFIG_DIR%%/migrations
+    migrations: %%PHINX_CONFIG_DIR%%/fixtures/actual
+    schema: %%PHINX_CONFIG_DIR%%/fixtures/actual
+    format: json

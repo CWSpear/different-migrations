@@ -3,7 +3,7 @@
 use CWSpear\Different\Exceptions\FileNotFoundException;
 use CWSpear\Different\Exceptions\InvalidFormatException;
 use CWSpear\Different\Exceptions\UnsetOptionException;
-use Phinx\Config\Config;
+use CWSpear\Different\Config\Config;
 use Phinx\Db\Adapter\AdapterInterface;
 use Phinx\Migration\Manager;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -11,6 +11,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 class SchemaManager extends Manager
 {
     const MANUAL_ADAPTER_INIT = 101;
+
+    const ARRAY_OPEN_SQUARE = '[';
+    const ARRAY_CLOSE_SQUARE = ']';
+
+    const ARRAY_OPEN_ROUND = 'array(';
+    const ARRAY_CLOSE_ROUND = ')';
+
+     const LINE_SEPARATOR = "\n        ";
 
     protected $defaultCol = [
         'limit'      => null,
@@ -184,18 +192,15 @@ class SchemaManager extends Manager
      */
     public function export()
     {
-        $dir    = $this->getOption('dir');
-        $format = $this->getOption('format');
+        $format = $this->getConfig()->getSchemaFormat();
 
         $tables = $this->diffSchema($this->getDatabaseSchema(), []);
 
-        // @todo create directory/make sure it's writable
         foreach ($tables as $table) {
             $schema = $this->stringifySchema($table);
 
-            $file = "{$dir}/{$table['table']}.{$format}";
-            file_put_contents($file, $schema);
-            $this->output->writeln("<info>Created schema<info> <comment>{$file}</comment>");
+            $filePath = $this->saveToFile("{$table['table']}.{$format}", $schema);
+            $this->output->writeln("<info>Created schema<info> <comment>{$filePath}</comment>");
         }
     }
 
@@ -269,7 +274,7 @@ class SchemaManager extends Manager
      */
     public function getPathFromName($name)
     {
-        return "{$this->getOption('dir')}/{$name}.{$this->getOption('format')}";
+        return str_replace(getcwd(), '.', "{$this->getConfig()->getSchemaPath()}/{$name}.{$this->getConfig()->getSchemaFormat()}");
     }
 
     /**
@@ -326,7 +331,7 @@ class SchemaManager extends Manager
      */
     public function stringifySchema(array $array)
     {
-        $format = $this->getOption('format');
+        $format = $this->getConfig()->getSchemaFormat();
 
         switch ($format) {
             case 'json':
@@ -351,7 +356,7 @@ class SchemaManager extends Manager
      */
     public function parseSchema($str)
     {
-        $format = $this->getOption('format');
+        $format = $this->getConfig()->getSchemaFormat();
 
         switch ($format) {
             case 'json':
@@ -368,13 +373,110 @@ class SchemaManager extends Manager
     }
 
     /**
+     * Escape strings (and don't wrap booleans, ints, etc in quotes)
+     *
+     * @param mixed $var
+     * @return mixed
+     */
+    protected function formatToStr($var)
+    {
+        if (is_array($var)) {
+            $str = var_export($var, true);
+            $str = str_replace('  ', '    ', $str);
+            return str_replace("\n", self::LINE_SEPARATOR, $str);
+        }
+
+        return var_export($var, true);
+    }
+
+    /**
      * Create a migration based on up and down diffs
      *
      * @param array $up
      * @param array $down
+     * @param string $table
      */
-    public function createMigration(array $up, array $down)
+    public function createMigration(array $up, array $down, $table)
     {
-        // TODO: write logic here
+        if (isset($up['table'])) {
+            $tableChange = 'create';
+        } else {
+            $tableChange = 'update';
+        }
+
+        $upLines = ["\$table = \$this->table({$this->formatToStr($table)});"];
+
+        if (isset($up['columns'])) {
+            $upLines = $this->buildColumns($up['columns'], $upLines, 'add');
+        }
+
+        $upLines[] = "\$table->{$tableChange}();";
+
+
+        if ($tableChange === 'create') {
+            $downLines = ["\$this->dropTable({$this->formatToStr($table)});"];
+        } else {
+            $downLines = ["\$table = \$this->table({$this->formatToStr($table)});"];
+
+            if (isset($down['columns'])) {
+                $downLines = $this->buildColumns($down['columns'], $downLines, 'remove');
+            }
+
+            $downLines[] = "\$table->{$tableChange}();";
+        }
+
+
+    }
+
+    /**
+     * @param array $columns
+     * @param array $lines
+     * @param $move "add" or "remove"
+     * @return array
+     * @throws \Exception
+     */
+    protected function buildColumns(array $columns, array $lines, $move)
+    {
+        if ($move !== 'add' && $move !== "remove") {
+            throw new \Exception("'\$move' can only be 'add' or 'remove'");
+        }
+
+        foreach ($columns as $name => $opts) {
+            $type = isset($opts['type']) ? $opts['type'] : 'string';
+            unset($opts['type']);
+
+            $line = "\$table->{$move}Column({$this->formatToStr($name)}";
+
+            // only need to add options on add
+            if ($move === 'add') {
+                $line .= ", '{$type}'";
+
+                if (!empty($opts)) {
+                    $optStr = $this->formatToStr($opts);
+                    $line .= ", " .$optStr;
+                }
+            }
+
+            $line .= ');';
+
+            $lines[] = $line;
+        }
+
+        return $lines;
+    }
+
+    /**
+     * @param $fileName
+     * @param $contents
+     * @param bool $isMigration
+     * @return string the path to the file just saved
+     * @throws UnsetOptionException
+     */
+    protected function saveToFile($fileName, $contents, $isMigration = false)
+    {
+        $dir = $isMigration ? $this->getConfig()->getMigrationPath() : $this->getConfig()->getSchemaPath();
+        $filePath = "{$dir}/{$fileName}";
+        file_put_contents($filePath, $contents);
+        return $filePath;
     }
 }
