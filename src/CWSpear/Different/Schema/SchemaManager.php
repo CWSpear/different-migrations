@@ -1,15 +1,16 @@
 <?php namespace CWSpear\Different\Schema;
 
+use CWSpear\Different\Exceptions\FileNotFoundException;
+use CWSpear\Different\Exceptions\InvalidFormatException;
+use CWSpear\Different\Exceptions\UnsetOptionException;
 use Phinx\Config\Config;
 use Phinx\Db\Adapter\AdapterInterface;
 use Phinx\Migration\Manager;
-use Prophecy\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class SchemaManager extends Manager
 {
     const MANUAL_ADAPTER_INIT = 101;
-    const MANUAL_OPTIONS_INIT = null;
 
     protected $defaultCol = [
         'limit'      => null,
@@ -44,7 +45,7 @@ class SchemaManager extends Manager
     {
         parent::__construct($config, $output);
 
-        // if this statement is true, this they have to set adapter via $this->setAdapter()
+        // if this statement is true, then they have to set adapter via $this->setAdapter()
         if ($environment !== self::MANUAL_ADAPTER_INIT) {
             $this->adapter = $this->getEnvironment($environment)->getAdapter();
         }
@@ -87,7 +88,7 @@ class SchemaManager extends Manager
             $columns[$name] = $diffed;
         }
 
-        // this (indexes, FKs) all may only work on MySQL...?
+        // get all the foreign keys
         $rawForeignKeys = $this->adapter->getForeignKeys($table);
         $foreignKeys = [];
         $fkNames = [];
@@ -100,9 +101,12 @@ class SchemaManager extends Manager
             $fkNames[$foreignKey['columns'][0]] = true;
         }
 
+        // get all the indexes. or is it indices?
         $rawIndexes = $this->adapter->getIndexes($table);
         $indexes = [];
         foreach ($rawIndexes as $name => $indexInfo) {
+            // skip if key is primary or a foreign key.
+            // those will automatically be given indexes
             if ($name === 'PRIMARY' || !empty($fkNames[$name])) {
                 continue;
             }
@@ -214,6 +218,11 @@ class SchemaManager extends Manager
     }
 
     /**
+     * Set options (options needed differs on command).
+     *
+     * This is an array of options passed in threw the
+     * command line a la InputInterface::getOptions()
+     *
      * @param array $options
      * @return $this
      */
@@ -243,11 +252,12 @@ class SchemaManager extends Manager
     /**
      * @param string $option
      * @return mixed
+     * @throws UnsetOptionException
      */
     public function getOption($option)
     {
         if (!isset($this->options[$option])) {
-            throw new \InvalidArgumentException("You must set a '{$option}' option with setOptions.");
+            throw new UnsetOptionException("You must set a '{$option}' option with setOptions.");
         }
 
         return $this->options[$option];
@@ -296,11 +306,12 @@ class SchemaManager extends Manager
      *
      * @param $filePath
      * @return string
+     * @throws FileNotFoundException
      */
     public function getFileContents($filePath)
     {
         if (!$this->fileExists($filePath)) {
-            throw new InvalidArgumentException("File {$filePath} not found or not readable.");
+            throw new FileNotFoundException("File {$filePath} not found or not readable.");
         }
 
         return file_get_contents($filePath);
@@ -311,6 +322,7 @@ class SchemaManager extends Manager
      *
      * @param array $array
      * @return string
+     * @throws InvalidFormatException
      */
     public function stringifySchema(array $array)
     {
@@ -324,7 +336,7 @@ class SchemaManager extends Manager
             // @todo support other formats
 
             default:
-                throw new InvalidArgumentException("{$format} output format is not (yet?) supported");
+                throw new InvalidFormatException("{$format} output format is not (yet?) supported");
         }
 
         return $str;
@@ -335,6 +347,7 @@ class SchemaManager extends Manager
      *
      * @param $str
      * @return array
+     * @throws InvalidFormatException
      */
     public function parseSchema($str)
     {
@@ -348,7 +361,7 @@ class SchemaManager extends Manager
             // @todo support other formats
 
             default:
-                throw new InvalidArgumentException("{$format} output format is not (yet?) supported");
+                throw new InvalidFormatException("{$format} output format is not (yet?) supported");
         }
 
         return $array;

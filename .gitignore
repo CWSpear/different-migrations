@@ -2,5 +2,5 @@
 vendor/
 composer.lock
 
-spec/schema
-!spec/schema/.gitkeep
+spec/fixtures/actual
+!spec/fixtures/actual/.gitkeep
